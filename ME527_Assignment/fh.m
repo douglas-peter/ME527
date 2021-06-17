@@ -1,0 +1,2 @@
+
+F=myNeuralNetworkFunction(X,[],[]);
