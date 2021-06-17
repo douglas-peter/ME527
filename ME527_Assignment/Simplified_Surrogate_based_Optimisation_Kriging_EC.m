@@ -7,51 +7,51 @@ X0=X;
 rng('default')
 rng(220)
 
-ndim=2;
-TRUE_F=@(x) mask_EM1_EXq1(x,0);
+ndim = 2;
+TRUE_F = @(x) mask_EM1_EXq1(x, 0);
 
 %% Optimisation wi
-optionsGA = optimoptions('gamultiobj','PopulationSize',500,'PlotFcn',@gaplotpareto,'MaxGenerations',500,'Display','none');
-[X,FVAL,EXITFLAG,OUTPUT,POPULATION,SCORE] = gamultiobj(TRUE_F,ndim,[],[],[],[],zeros(1,ndim),ones(1,ndim),[],optionsGA);
+optionsGA = optimoptions('gamultiobj', 'PopulationSize', 500, 'PlotFcn',@gaplotpareto, 'MaxGenerations', 500, 'Display', 'none');
+[X, FVAL, EXITFLAG, OUTPUT, POPULATION, SCORE] = gamultiobj(TRUE_F, ndim, [], [], [], [], zeros(1, ndim), ones(1, ndim), [], optionsGA);
 
 close all
 
 %% DOE
-nn=7;
-xKept=lhsdesign(nn,ndim,'criterion','maximin','iterations',30);
+nn = 7;
+xKept = lhsdesign(nn, ndim, 'criterion', 'maximin', 'iterations', 30);
 
 
 hold on
-plot(xKept(:,1)*2*pi,xKept(:,2)*20,'o');
+plot(xKept(:, 1) * 2 * pi, xKept(:, 2) * 20, 'o');
 
 %% Evaluation of the two objectives
-yKept1=[];
-yKept2=[];
-for i=1:nn
-    [f]=TRUE_F(xKept(i,:));
-    yKept1=[yKept1; f(1)];
-    yKept2=[yKept2; f(2)];
+yKept1 = [];
+yKept2 = [];
+for i = 1: nn
+    [f] = TRUE_F(xKept(i, :));
+    yKept1 = [yKept1; f(1)];
+    yKept2 = [yKept2; f(2)];
 end
 
 
 
 addpath('.\dace')
 theta = [10 10]; lob = [1e-1 1e-1]; upb = [25 25];
-[dmodel1, perf1] = dacefit(xKept,yKept1, @regpoly0, @corrgauss, theta, lob, upb);
-[dmodel2, perf2] = dacefit(xKept,yKept2, @regpoly0, @corrgauss, theta, lob, upb);
-dmodel10=dmodel1;
-dmodel20=dmodel2;
+[dmodel1, perf1] = dacefit(xKept, yKept1, @regpoly0, @corrgauss, theta, lob, upb);
+[dmodel2, perf2] = dacefit(xKept, yKept2, @regpoly0, @corrgauss, theta, lob, upb);
+dmodel10 = dmodel1;
+dmodel20 = dmodel2;
 
 %% Definition of the surrogate model that should be passed to optimiser
-fg_1=@(x) predictor(x,dmodel1);
-fg_2=@(x) predictor(x,dmodel2);
-FITNESSFCN=@(x) [fg_1(x);fg_2(x)];
+fg_1 = @(x) predictor(x, dmodel1);
+fg_2 = @(x) predictor(x, dmodel2);
+FITNESSFCN = @(x) [fg_1(x); fg_2(x)];
 
 
-D=(0:.1:2*pi);
-U=(0:.1:20);
-[Xr,Yr] = meshgrid(D./2/pi,U./20);                                
-for i=1:size(Xr,1)
+D=(0: .1: 2 * pi);
+U=(0: .1 : 20);
+[Xr, Yr] = meshgrid(D./2/pi, U./20);                                
+for i = 1: size(Xr, 1)
     for j=1:size(Xr,2)
         FF=FITNESSFCN([Xr(i,j),Yr(i,j)]);
         yEM1(i,j)=FF(1);
